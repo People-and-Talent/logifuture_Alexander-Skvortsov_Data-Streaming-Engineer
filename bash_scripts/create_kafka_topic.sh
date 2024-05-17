@@ -7,4 +7,4 @@ sleep 10
 kafka-topics.sh --create --topic transactions_topic --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1
 
 # Keep the container running
-tail -f /dev/null
+#tail -f /dev/null

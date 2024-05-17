@@ -14,6 +14,7 @@ services:
   kafka:
     image: bitnami/kafka:latest
     container_name: kafka
+    user: "root:root"
     ports:
       - "9092:9092"       # Internal communication or within Docker network
       - "29092:29092"     # External access from host
@@ -25,16 +26,14 @@ services:
       KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
       KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'  # Enable automatic topic creation
-      KAFKA_CREATE_TOPICS: "transactions_topic:1:1"  # TopicName:Partitions:ReplicationFactor
-
       ALLOW_PLAINTEXT_LISTENER: "yes"
     depends_on:
       - zookeeper
-#    volumes:
-#      - kafka-data:/bitnami/kafka
+
     volumes:
       - ./bash_scripts:/scripts
-    command: /bin/bash -c "exec /scripts/create_kafka_topic.sh & exec /etc/confluent/docker/run"
+      - kafka-data:/bitnami/kafka
+    command: /bin/bash -c "exec /scripts/create_kafka_topic.sh"
 
     networks:
       - app-network
@@ -60,8 +59,7 @@ services:
     volumes:
       - cassandra-data:/var/lib/cassandra
       - ./db_scripts:/init_db:ro
-      -
-    command: /bin/bash -c "exec cassandra -f & cqlsh -f /cql-init/init.cql" # initialize database
+    command: /bin/bash -c "exec cassandra -fR & cqlsh -f /cql-init/init.cql" # initialize database
     networks:
       - app-network
 
@@ -125,7 +123,7 @@ services:
     volumes:
       - ./spark_scripts:/opt/bitnami/spark/scripts
 
-    command: /opt/bitnami/spark/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 --master spark://spark-master:7077 /opt/bitnami/spark/scripts/test_3.py
+    command: /opt/bitnami/spark/bin/spark-submit --master spark://spark-master:7077 /opt/bitnami/spark/scripts/spark_all_tasks.py
     restart: on-failure
 
 
