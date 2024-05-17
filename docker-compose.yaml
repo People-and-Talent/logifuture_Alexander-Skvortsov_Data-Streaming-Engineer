@@ -32,6 +32,10 @@ services:
       - zookeeper
 #    volumes:
 #      - kafka-data:/bitnami/kafka
+    volumes:
+      - ./bash_scripts:/scripts
+    command: /bin/bash -c "exec /scripts/create_kafka_topic.sh & exec /etc/confluent/docker/run"
+
     networks:
       - app-network
     restart: on-failure
@@ -42,6 +46,8 @@ services:
     ports:
       - "9042:9042"
     environment:
+      - CASSANDRA_PORT='9092'
+      - CASSANDRA_KEYSPACE='betting'
       - CASSANDRA_CLUSTER_NAME=CassandraCluster
       - CASSANDRA_LISTEN_ADDRESS=cassandra
       - CASSANDRA_BROADCAST_ADDRESS=cassandra
@@ -51,9 +57,11 @@ services:
       - CASSANDRA_USERNAME=cassandra
       - CASSANDRA_PASSWORD=cassandra
 
-#    volumes:
-#      - cassandra-data:/var/lib/cassandra
-#      - ./cassandra.yaml:/opt/bitnami/cassandra/conf/cassandra.yaml
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+      - ./db_scripts:/init_db:ro
+      -
+    command: /bin/bash -c "exec cassandra -f & cqlsh -f /cql-init/init.cql" # initialize database
     networks:
       - app-network
 
@@ -71,7 +79,6 @@ services:
       - "8080:8080"
       - "7077:7077"
     networks:
-#      - spark-network
       - app-network
     volumes:
       - ./spark_scripts:/opt/bitnami/spark/scripts  # Mounting the local spark_scripts directory
@@ -118,9 +125,8 @@ services:
     volumes:
       - ./spark_scripts:/opt/bitnami/spark/scripts
 
-#    command: /opt/bitnami/spark/bin/spark-submit --master spark://spark-master:7077 /opt/bitnami/spark/scripts/pi.py
     command: /opt/bitnami/spark/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 --master spark://spark-master:7077 /opt/bitnami/spark/scripts/test_3.py
-#    restart: on-failure
+    restart: on-failure
 
 
   api:

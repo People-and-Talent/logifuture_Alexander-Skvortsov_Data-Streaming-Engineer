@@ -24,7 +24,7 @@ def upsert_to_cassandra(df, epoch_id, table_name):
         .save()
 
 spark = SparkSession.builder \
-    .appName("KafkaToCassandraBalance") \
+    .appName("Streaming_Pipeline") \
     .config("spark.cassandra.connection.host", SPARK_HOST) \
     .config("spark.cassandra.connection.port", CASSANDRA_PORT) \
     .config("spark.cassandra.auth.username", CASSANDRA_USERNAME) \

@@ -9,7 +9,7 @@ CHECK_POINT_LOC_CASSANDRA = getenv('CHECK_POINT_LOC_CASSANDRA',PROJECT_PATH / 't
 
 
 
-# database settings
+# db_scripts settings
 
 DB_KEY_SPACE = getenv('DB_KEY_SPACE', 'betting')
 CASSANDRA_USERNAME = getenv('CASSANDRA_USERNAME', 'cassandra')
