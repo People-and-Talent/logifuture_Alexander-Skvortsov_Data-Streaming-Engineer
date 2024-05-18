@@ -2,7 +2,7 @@ import datetime
 import time
 from fastapi import FastAPI
 from cassandra.cluster import Cluster, PlainTextAuthProvider
-from settings import *
+from spark_scripts.settings import *
 
 app = FastAPI()
 

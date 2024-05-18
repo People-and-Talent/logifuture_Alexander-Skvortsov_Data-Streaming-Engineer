@@ -1,0 +1,9 @@
+FROM bitnami/spark:latest
+
+USER root
+
+# Install pandas
+RUN install_packages python3-pip && \
+    pip3 install pandas
+
+USER 1001
