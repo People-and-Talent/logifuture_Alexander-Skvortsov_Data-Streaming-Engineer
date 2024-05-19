@@ -2,8 +2,7 @@ version: '3.8'
 services:
 
   zookeeper:
-    image: wurstmeister/zookeeper
-    container_name: zookeeper
+    image: bitnami/zookeeper:latest
     ports:
       - "2181:2181"
     environment:
@@ -13,7 +12,7 @@ services:
       - app-network
 
   kafka:
-    image: wurstmeister/kafka:latest
+    image: bitnami/kafka:latest
     container_name: kafka
     user: "root:root"
     ports:
@@ -22,24 +21,40 @@ services:
     environment:
       KAFKA_HOST: 'kafka'
       KAFKA_PORT: '9092'
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'  # Enable automatic topic creation
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'  # Enable automatic topic creation
       ALLOW_PLAINTEXT_LISTENER: "yes"
-      KAFKA_CREATE_TOPICS: "transactions_topic:1:1"
     depends_on:
       - zookeeper
 
     volumes:
       - ./bash_scripts:/scripts
-      - kafka-data:/wurstmeister/kafka
+      - kafka-data:/bitnami/kafka
+#    command: /bin/bash -c "exec /scripts/create_kafka_topic.sh"
+#    command: kafka-topics.sh --create --topic transactions_topic --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1;
 
 
     networks:
       - app-network
 #    restart: on-failure
+
+  init-kafka:
+    image: bitnami/kafka:latest
+    depends_on:
+      - kafka
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server localhost:29092 --list
+      echo -e 'Creating kafka topics'
+      kafka-topics.sh --create --topic transactions_topic --bootstrap-server localhost:29092 --replication-factor 1 --partitions 1
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server localhost:29092 --list
+      "
 
   cassandra:
     image: bitnami/cassandra:latest
@@ -60,20 +75,17 @@ services:
 
     volumes:
       - cassandra-data:/var/lib/cassandra
-      - ./db_scripts:/docker-entrypoint-initdb.d
+      - ./db_scripts:/init_db:ro
+    command: /bin/bash -c "exec cassandra -fR & cqlsh -f /cql-init/init.cql" # initialize database
     networks:
       - app-network
 
 
   spark-master:
-    build:
-      context: .
-      dockerfile: Dockerfile.spark
+    image: bitnami/spark:latest
     container_name: spark-master
     environment:
       - SPARK_MODE=master
-      - KAFKA_HOST=kafka
-      - KAFKA_PORT=9092
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
       - SPARK_RPC_ENCRYPTION_ENABLED=no
       - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
@@ -84,21 +96,16 @@ services:
     networks:
       - app-network
     volumes:
-#      - ./spark_scripts:/opt/bitnami/spark/scripts  # Mounting the local spark_scripts directory
+      - ./spark_scripts:/opt/bitnami/spark/scripts  # Mounting the local spark_scripts directory
       - ./data:/opt/spark-data
-      - ./spark_scripts:/opt/spark_scripts
 
     command: /opt/bitnami/spark/bin/spark-class org.apache.spark.deploy.master.Master
 
 
   spark-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.spark
+    image: bitnami/spark:latest
     container_name: spark-worker
     environment:
-      - KAFKA_HOST=kafka
-      - KAFKA_PORT=9092
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_MODE=worker
       - SPARK_WORKER_MEMORY=1G
@@ -111,11 +118,6 @@ services:
     depends_on:
       - spark-master
 
-    volumes:
-      #      - ./spark_scripts:/opt/bitnami/spark/scripts  # Mounting the local spark_scripts directory
-      - ./data:/opt/spark-data
-      - ./spark_scripts:/opt/spark_scripts
-
     networks:
       - app-network
 
@@ -123,15 +125,11 @@ services:
 
 
   spark-job:
-    build:
-      context: .
-      dockerfile: Dockerfile.spark
+    image: bitnami/spark:latest
     container_name: spark-job
     networks:
       - app-network
     environment:
-      KAFKA_HOST: kafka
-      KAFKA_PORT: 9092
       SPARK_MASTER_URL: spark://spark-master:7077
       CASSANDRA_USERNAME: cassandra
       CASSANDRA_PASSWORD: cassandra
@@ -140,10 +138,10 @@ services:
       - kafka
       - cassandra
     volumes:
-      - ./spark_scripts:/opt/spark_scripts
+      - ./spark_scripts:/opt/bitnami/spark/scripts
 
-    command: /opt/bitnami/spark/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,com.datastax.spark:spark-cassandra-connector_2.12:3.5.0 --master spark://spark-master:7077 /opt/spark_scripts/spark_all_tasks.py
-#    restart: on-failure
+    command: /opt/bitnami/spark/bin/spark-submit --master spark://spark-master:7077 /opt/bitnami/spark/scripts/spark_all_tasks.py
+    restart: on-failure
 
 
   api:
