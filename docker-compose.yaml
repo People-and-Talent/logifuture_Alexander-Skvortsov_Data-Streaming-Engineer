@@ -36,10 +36,21 @@ services:
       - ./bash_scripts:/scripts
       - kafka-data:/wurstmeister/kafka
 
-
     networks:
       - app-network
-#    restart: on-failure
+    restart: on-failure
+
+#  schema-registry:
+#    image: confluentinc/cp-schema-registry:latest
+#    depends_on:
+#      - zookeeper
+#      - kafka
+#    environment:
+#      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+#      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+#      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+#    ports:
+#      - "8081:8081"
 
   cassandra:
     image: bitnami/cassandra:latest
@@ -144,6 +155,7 @@ services:
 
     command: /opt/bitnami/spark/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,com.datastax.spark:spark-cassandra-connector_2.12:3.5.0 --master spark://spark-master:7077 /opt/spark_scripts/spark_all_tasks.py
 #    restart: on-failure
+#    command: /opt/bitnami/spark/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,com.datastax.spark:spark-cassandra-connector_2.12:3.5.0 --master spark://spark-master:7077 /opt/spark_scripts/state_store_initialization.py
 
 
   api:

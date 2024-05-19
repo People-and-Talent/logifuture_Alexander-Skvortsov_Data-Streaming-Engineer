@@ -2,7 +2,8 @@ import datetime
 import time
 from fastapi import FastAPI
 from cassandra.cluster import Cluster, PlainTextAuthProvider
-from spark_scripts.settings import *
+
+from api_settings import *
 
 app = FastAPI()
 
@@ -24,10 +25,10 @@ else:
 
 @app.get("/balance/{wallet_id}")
 def get_balance(wallet_id: str):
-    query = "SELECT balance, currency FROM balances WHERE walletID = %s"
+    query = "SELECT balance, currency FROM balances WHERE wallet_id = %s"
     row = session.execute(query, [wallet_id]).one()
     if row:
-        return {"walletID": wallet_id, "balance": row.balance, "currency": row.currency}
+        return {"wallet_id": wallet_id, "balance": row.balance, "currency": row.currency}
     else:
         return {"error": "Wallet ID not found"}
 

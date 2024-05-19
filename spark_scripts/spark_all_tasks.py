@@ -1,18 +1,13 @@
-import datetime
-import logging
-from functools import partial
 
+from functools import partial
 from settings import *
 from pandas_udfs import *
-import json
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col
 from pyspark.sql.streaming.state import GroupState, GroupStateTimeout
 from schema_models import *
-import pandas as pd
-import os
 
-os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,com.datastax.spark:spark-cassandra-connector_2.12:3.5.0 pyspark-shell'
+
 
 
 def upsert_to_cassandra(df, epoch_id, table_name):
@@ -29,6 +24,7 @@ spark = SparkSession.builder \
     .config("spark.cassandra.connection.port", CASSANDRA_PORT) \
     .config("spark.cassandra.auth.username", CASSANDRA_USERNAME) \
     .config("spark.cassandra.auth.password", CASSANDRA_PASSWORD) \
+    .config("spark.sql.streaming.checkpointLocation", "/tmp/spark-checkpoints") \
     .config("spark.sql.shuffle.partitions", "1") \
     .config("spark.default.parallelism", "1") \
     .config("spark.streaming.backpressure.enabled", "true") \
@@ -61,14 +57,6 @@ messages = messages.filter(
     col("currency").isNotNull() &
     col("timestamp").isNotNull()
 )
-
-messages.printSchema()
-
-# query = messages \
-#         .writeStream \
-#         .outputMode("append") \
-#         .format("console") \
-#         .start()  # Start the streaming computation
 
 # Question 1: Compute Balances
 # Apply stateful processing to calculate the new balance for each wallet id.
