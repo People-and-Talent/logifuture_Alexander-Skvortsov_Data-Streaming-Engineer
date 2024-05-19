@@ -28,35 +28,37 @@ No additional operations are required for set up or initialization.
     FastAPI: http://localhost:8000
 
 ### 3. Sending Kafka Messages
-You can send messages to the Kafka topic using the Kafka console producer, either from the host machine or from the container:
-
+You can send messages to the Kafka topic using the Kafka console producer, either from the host machine or from the container: <br />
 When the Kafka container is created, it automatically creates topic: `transactions_topic` which is used to store transaction events
 which are then consumed by the Spark service.
 
 #### Send messages from the host machine (use port: 29092):
+
 `kafka-console-producer.sh --topic transactions_topic --bootstrap-server localhost:29092`
 
 #### Send messages from the docker container (use port: 9092):
-`docker exec -it <kafka container name OR container id> kafka-console-producer.sh --broker-list kafka:9092 --topic transactions_topic
-`
+
+`docker exec -it <kafka container name OR container id> kafka-console-producer.sh --broker-list kafka:9092 --topic transactions_topic`
+
 Example: `docker exec -it kafka kafka-console-producer.sh --broker-list kafka:9092 --topic transactions_topic`
 
 #### JSON message:
 The Json message needs to have the below structure, otherwise it will be filtered out.
 
-• transactionID (string)
-    • walletID (string)
-    • productID (string)
-    • type (string)
-        ◦ credit (add money to wallet)
-        ◦ debit (deduct money from wallet)
-        ◦ cancelCredit (rollback a credit operation)
-        ◦ cancelDebit (rollback a debit operation)
-    • amount (BigDecimal)
-    • currency (string)
-    • timestamp (datetime)
+    • transactionID (string)
+        • walletID (string)
+        • productID (string)
+        • type (string)
+            ◦ credit (add money to wallet)
+            ◦ debit (deduct money from wallet)
+            ◦ cancelCredit (rollback a credit operation)
+            ◦ cancelDebit (rollback a debit operation)
+        • amount (BigDecimal)
+        • currency (string)
+        • timestamp (datetime)
 
 #### Json message example:
+
 {"transaction_id": "trans123","wallet_id": "b1","product_id": "product5678","type": "credit","amount": 5.00,"currency": "USD","timestamp": "2024-05-11T12:50:00Z"}
 
 
@@ -125,12 +127,13 @@ Connect to db: `docker exec -it cassandra cqlsh -u cassandra -p cassandra`
 
 `Apache Spark`: Processes the streaming data and maintains state.
 
+`RocksDB`: Built-in state-store implementation. Used by Spark for stateful operations. 
+
 `Cassandra`: Stores the wallet balances, avg. daily debits and top 5 scores.
 
 `FastAPI`: Provides a REST API to query the wallet balances, avg debits and top 5 scores per product.
 
 
-[//]: # (![Alt text]&#40;architecture.png &#41;)
 <img src="architecture.png" alt="the general architecure" style="width:500px;"/>
 
 

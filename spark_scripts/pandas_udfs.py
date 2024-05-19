@@ -1,9 +1,11 @@
+from typing import Iterator, Tuple
+
 from pyspark.sql.streaming.state import GroupState
 import json
 import pandas as pd
+from pandas import DataFrame
 
-
-def update_balance(key, pdfs_iter, state: GroupState):
+def update_balance(key: Tuple, pdfs_iter: Iterator[DataFrame], state: GroupState)-> Iterator[DataFrame]:
 
     # Handle transactions for unloaded wallet IDs
     if state.exists:
@@ -28,7 +30,7 @@ def update_balance(key, pdfs_iter, state: GroupState):
     yield pd.DataFrame({"wallet_id": [key[0]], "balance": [current_balance], 'currency': [currency]})
 
 
-def update_avg_debit(key, pdfs_iter, state: GroupState):
+def update_avg_debit(key: Tuple, pdfs_iter: Iterator[DataFrame], state: GroupState)-> Iterator[DataFrame]:
     wallet_id = str(key[0])
 
     # Handle transactions for unloaded wallet IDs
@@ -47,7 +49,7 @@ def update_avg_debit(key, pdfs_iter, state: GroupState):
         if df is None:
             continue
 
-        df['amount'] = df['amount'].astype(int)
+        df['amount'] = df['amount'].astype(float)
         batch_debit += df.loc[df['type']=='debit']['amount'].sum()
         date_list.append(pd.to_datetime(df['timestamp']).max().to_pydatetime())
 
@@ -70,7 +72,7 @@ def update_avg_debit(key, pdfs_iter, state: GroupState):
 
 
 
-def update_top5_credits(key, pdfs_iter, state: GroupState):
+def update_top5_credits(key: Tuple, pdfs_iter: Iterator[DataFrame], state: GroupState) -> Iterator[DataFrame]:
 
     # Handle transactions for unloaded wallet IDs
     if state.exists:

@@ -12,6 +12,10 @@ COPY spark_scripts /opt/spark_scripts
 # Install the Python packages from the requirements file
 RUN pip3 install -r /tmp/spark_requirements.txt
 
+# Create the checkpoint directory with the correct permissions
+RUN mkdir -p /opt/app/tmp/cassandra_checkpoint && chown -R 1001:1001 /opt/app/tmp
+
+
 # Set PYTHONPATH to include the custom scripts directory
 ENV PYTHONPATH="/opt/spark_scripts:${PYTHONPATH}"
 

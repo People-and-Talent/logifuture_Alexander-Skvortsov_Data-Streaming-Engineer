@@ -82,6 +82,7 @@ services:
       dockerfile: Dockerfile.spark
     container_name: spark-master
     environment:
+      - CHECK_POINT_LOC_CASSANDRA='/opt/app/tmp/cassandra_checkpoint'
       - SPARK_MODE=master
       - KAFKA_HOST=kafka
       - KAFKA_PORT=9092
@@ -95,9 +96,8 @@ services:
     networks:
       - app-network
     volumes:
-#      - ./spark_scripts:/opt/bitnami/spark/scripts  # Mounting the local spark_scripts directory
       - ./data:/opt/spark-data
-      - ./spark_scripts:/opt/spark_scripts
+      - ./spark_scripts:/opt/app/spark_scripts
 
     command: /opt/bitnami/spark/bin/spark-class org.apache.spark.deploy.master.Master
 
@@ -123,7 +123,6 @@ services:
       - spark-master
 
     volumes:
-      #      - ./spark_scripts:/opt/bitnami/spark/scripts  # Mounting the local spark_scripts directory
       - ./data:/opt/spark-data
       - ./spark_scripts:/opt/spark_scripts
 
@@ -152,10 +151,10 @@ services:
       - cassandra
     volumes:
       - ./spark_scripts:/opt/spark_scripts
+      - ./spark_scripts/tmp:/opt/spark_scripts/tmp
 
     command: /opt/bitnami/spark/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,com.datastax.spark:spark-cassandra-connector_2.12:3.5.0 --master spark://spark-master:7077 /opt/spark_scripts/spark_all_tasks.py
 #    restart: on-failure
-#    command: /opt/bitnami/spark/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,com.datastax.spark:spark-cassandra-connector_2.12:3.5.0 --master spark://spark-master:7077 /opt/spark_scripts/state_store_initialization.py
 
 
   api:

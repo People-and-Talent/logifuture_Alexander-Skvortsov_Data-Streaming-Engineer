@@ -5,7 +5,7 @@ from pathlib import Path
 PROJECT_PATH = Path(__file__).resolve().parent
 
 
-CHECK_POINT_LOC_CASSANDRA = getenv('CHECK_POINT_LOC_CASSANDRA',PROJECT_PATH / 'tmp/cassandra_checkpoint')
+CHECK_POINT_LOC_CASSANDRA = getenv('CHECK_POINT_LOC_CASSANDRA','/opt/app/tmp/cassandra_checkpoint')
 
 
 

@@ -4,13 +4,13 @@ from settings import *
 from pandas_udfs import *
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col
-from pyspark.sql.streaming.state import GroupState, GroupStateTimeout
+from pyspark.sql.streaming.state import GroupStateTimeout
 from schema_models import *
+import os
+from pandas import DataFrame
 
 
-
-
-def upsert_to_cassandra(df, epoch_id, table_name):
+def upsert_to_cassandra(df:DataFrame, epoch_id, table_name: str):
     df.write \
         .format("org.apache.spark.sql.cassandra") \
         .mode("append") \
@@ -18,13 +18,18 @@ def upsert_to_cassandra(df, epoch_id, table_name):
         .option("checkpointLocation", CHECK_POINT_LOC_CASSANDRA) \
         .save()
 
+
+# Ensure checkpoint directory exists
+# if not os.path.exists(CHECK_POINT_LOC_CASSANDRA):
+#     os.makedirs(CHECK_POINT_LOC_CASSANDRA)
+
 spark = SparkSession.builder \
     .appName("Streaming_Pipeline") \
     .config("spark.cassandra.connection.host", 'cassandra') \
     .config("spark.cassandra.connection.port", CASSANDRA_PORT) \
     .config("spark.cassandra.auth.username", CASSANDRA_USERNAME) \
     .config("spark.cassandra.auth.password", CASSANDRA_PASSWORD) \
-    .config("spark.sql.streaming.checkpointLocation", "/tmp/spark-checkpoints") \
+    .config("spark.sql.streaming.checkpointLocation",CHECK_POINT_LOC_CASSANDRA) \
     .config("spark.sql.shuffle.partitions", "1") \
     .config("spark.default.parallelism", "1") \
     .config("spark.streaming.backpressure.enabled", "true") \
@@ -39,7 +44,7 @@ messages = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", f"{KAFKA_HOST}:{KAFKA_PORT}") \
     .option("subscribe", KAFKA_TRANSACTIONS_TOPIC) \
-    .option("startingOffsets", "latest") \
+    .option("startingOffsets", "earliest") \
     .option("failOnDataLoss", FAIL_ON_DATALOSS) \
     .option("maxOffsetsPerTrigger", MAX_OFFSET_PER_TRIGGER) \
     .load() \

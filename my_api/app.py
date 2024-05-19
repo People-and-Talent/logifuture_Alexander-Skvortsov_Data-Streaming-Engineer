@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from cassandra.cluster import Cluster, PlainTextAuthProvider
 
 from api_settings import *
+from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 
@@ -51,6 +52,6 @@ def get_top_credits(product_id: str):
     row = session.execute(query, [product_id]).one()
 
     if row:
-        return {"product_id": product_id, "top_5_credits": row.top_5_credits}
+        return {"product_id": product_id, "top_5_credits": jsonable_encoder(row.top_5_credits)}
     else:
         return {"error": "Product ID not found"}
