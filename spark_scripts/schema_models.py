@@ -3,13 +3,13 @@ from pyspark.sql.types import StructType, StructField, StringType, DecimalType, 
 
 # Define Kafka message schema
 transaction_schema = StructType([
-    StructField("transaction_id", StringType(), True),
-    StructField("wallet_id", StringType(), True),
-    StructField("product_id", StringType(), True),
-    StructField("type", StringType(), True),
-    StructField("amount", DecimalType(), True),
-    StructField("currency", StringType(), True),
-    StructField("timestamp", TimestampType(), True)
+    StructField("transaction_id", StringType(), False),
+    StructField("wallet_id", StringType(), False),
+    StructField("product_id", StringType(), False),
+    StructField("type", StringType(), False),
+    StructField("amount", FloatType(), False),
+    StructField("currency", StringType(), False),
+    StructField("timestamp", TimestampType(), False)
 ])
 
 

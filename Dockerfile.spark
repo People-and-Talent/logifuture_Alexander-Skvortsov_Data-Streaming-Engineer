@@ -7,8 +7,12 @@ RUN install_packages python3-pip
 
 # Copy the requirements file
 COPY spark_requirements.txt /tmp/spark_requirements.txt
+COPY spark_scripts /opt/spark_scripts
 
 # Install the Python packages from the requirements file
 RUN pip3 install -r /tmp/spark_requirements.txt
+
+# Set PYTHONPATH to include the custom scripts directory
+ENV PYTHONPATH="/opt/spark_scripts:${PYTHONPATH}"
 
 USER 1001

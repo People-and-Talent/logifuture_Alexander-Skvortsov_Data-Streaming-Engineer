@@ -25,7 +25,7 @@ def update_balance(key, pdfs_iter, state: GroupState):
         current_balance += total_amount
 
     state.update((current_balance,))
-    yield pd.DataFrame({"wallet_id": [key[0]], "balance": [str(current_balance)], 'currency': [currency]})
+    yield pd.DataFrame({"wallet_id": [key[0]], "balance": [current_balance], 'currency': [currency]})
 
 
 def update_avg_debit(key, pdfs_iter, state: GroupState):

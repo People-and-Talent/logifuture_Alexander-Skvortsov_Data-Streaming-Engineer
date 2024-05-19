@@ -25,7 +25,7 @@ def upsert_to_cassandra(df, epoch_id, table_name):
 
 spark = SparkSession.builder \
     .appName("Streaming_Pipeline") \
-    .config("spark.cassandra.connection.host", SPARK_HOST) \
+    .config("spark.cassandra.connection.host", 'cassandra') \
     .config("spark.cassandra.connection.port", CASSANDRA_PORT) \
     .config("spark.cassandra.auth.username", CASSANDRA_USERNAME) \
     .config("spark.cassandra.auth.password", CASSANDRA_PASSWORD) \
@@ -51,8 +51,24 @@ messages = spark.readStream \
     .filter(col("data").isNotNull())\
     .select("data.*")
 
+# Filter out messages with null values in mandatory fields
+messages = messages.filter(
+    col("transaction_id").isNotNull() &
+    col("wallet_id").isNotNull() &
+    col("product_id").isNotNull() &
+    col("type").isNotNull() &
+    col("amount").isNotNull() &
+    col("currency").isNotNull() &
+    col("timestamp").isNotNull()
+)
 
+messages.printSchema()
 
+# query = messages \
+#         .writeStream \
+#         .outputMode("append") \
+#         .format("console") \
+#         .start()  # Start the streaming computation
 
 # Question 1: Compute Balances
 # Apply stateful processing to calculate the new balance for each wallet id.
