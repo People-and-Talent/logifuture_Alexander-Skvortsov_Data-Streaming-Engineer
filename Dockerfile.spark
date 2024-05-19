@@ -1,9 +1,14 @@
 FROM bitnami/spark:latest
 
-USER root
 
-# Install pandas
-RUN install_packages python3-pip && \
-    pip3 install pandas
+
+USER root
+RUN install_packages python3-pip
+
+# Copy the requirements file
+COPY spark_requirements.txt /tmp/spark_requirements.txt
+
+# Install the Python packages from the requirements file
+RUN pip3 install -r /tmp/spark_requirements.txt
 
 USER 1001
