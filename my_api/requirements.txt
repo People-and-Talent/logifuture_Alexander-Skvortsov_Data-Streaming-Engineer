@@ -59,34 +59,18 @@ markupsafe==2.1.5
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-numpy==1.26.4
-    # via
-    #   pandas
-    #   pyarrow
 orjson==3.10.3
     # via fastapi
-pandas==2.2.2
-    # via betting_app (setup.py)
-py4j==0.10.9.7
-    # via pyspark
-pyarrow==16.1.0
-    # via betting_app (setup.py)
 pydantic==2.7.1
     # via fastapi
 pydantic-core==2.18.2
     # via pydantic
 pygments==2.18.0
     # via rich
-pyspark==3.5.1
-    # via betting_app (setup.py)
-python-dateutil==2.9.0.post0
-    # via pandas
 python-dotenv==1.0.1
     # via uvicorn
 python-multipart==0.0.9
     # via fastapi
-pytz==2024.1
-    # via pandas
 pyyaml==6.0.1
     # via uvicorn
 rich==13.7.1
@@ -94,9 +78,7 @@ rich==13.7.1
 shellingham==1.5.4
     # via typer
 six==1.16.0
-    # via
-    #   geomet
-    #   python-dateutil
+    # via geomet
 sniffio==1.3.1
     # via
     #   anyio
@@ -113,8 +95,6 @@ typing-extensions==4.11.0
     #   pydantic-core
     #   typer
     #   uvicorn
-tzdata==2024.1
-    # via pandas
 ujson==5.10.0
     # via fastapi
 uvicorn[standard]==0.29.0
